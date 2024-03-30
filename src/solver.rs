@@ -46,23 +46,18 @@ impl Solver {
     }
 
     pub fn update(&mut self, prediction: Vec<u8>, bulls: u8, cows: u8) {
-        self.possibilities = self
-            .possibilities
-            .iter()
-            .filter(|&p| {
-                let mut b = 0;
-                let mut c = 0;
-                for (i, &digit) in p.iter().enumerate() {
-                    if digit == prediction[i] {
-                        b += 1;
-                    } else if prediction.contains(&digit) {
-                        c += 1;
-                    }
+        self.possibilities.retain(|p| {
+            let mut b = 0;
+            let mut c = 0;
+            for (i, &digit) in p.iter().enumerate() {
+                if digit == prediction[i] {
+                    b += 1;
+                } else if prediction.contains(&digit) {
+                    c += 1;
                 }
-                b == bulls && c == cows
-            })
-            .map(|p| p.clone())
-            .collect();
+            }
+            b == bulls && c == cows
+        });
 
         eprintln!("Remaining possibilities: {}", self.possibilities.len());
     }
