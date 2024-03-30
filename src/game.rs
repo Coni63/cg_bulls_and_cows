@@ -7,6 +7,7 @@ pub struct Game {
 }
 
 impl Game {
+    #[allow(dead_code)]
     pub fn random(size: u8) -> Game {
         let mut board: Vec<u8> = (0..=9).collect();
         while board[0] == 0 {
@@ -22,10 +23,10 @@ impl Game {
     }
 
     pub fn describe(&self) {
-        println!("{:?}", self.board);
+        println!("Answer : {:?}", self.board);
     }
 
-    pub fn play(&self, prediction: Vec<u8>) -> (i8, i8) {
+    pub fn play(&self, prediction: &[u8]) -> (u8, u8) {
         let mut bulls = 0;
         let mut cows = 0;
 
@@ -40,7 +41,8 @@ impl Game {
         (bulls, cows)
     }
 
-    pub fn is_valid_submission(&self, submission: &Vec<u8>) -> bool {
+    #[allow(dead_code)]
+    pub fn is_valid_submission(&self, submission: &[u8]) -> bool {
         if submission.len() != self.board.len() {
             return false;
         }
@@ -73,15 +75,15 @@ mod tests {
     #[test]
     fn test_play() {
         let game = Game::fixed(vec![1, 2, 3, 4]);
-        assert_eq!(game.play(vec![1, 4, 6, 2]), (1, 2));
+        assert_eq!(game.play(&[1, 4, 6, 2]), (1, 2));
     }
 
     #[test]
     fn test_is_valid_submission() {
         let game = Game::fixed(vec![1, 2, 3, 4]);
-        assert!(game.is_valid_submission(&vec![1, 2, 3, 4]));
-        assert!(!game.is_valid_submission(&vec![1, 2, 3, 3]));
-        assert!(!game.is_valid_submission(&vec![1, 2, 3]));
-        assert!(!game.is_valid_submission(&vec![0, 1, 2, 3]));
+        assert!(game.is_valid_submission(&[1, 2, 3, 4]));
+        assert!(!game.is_valid_submission(&[1, 2, 3, 3]));
+        assert!(!game.is_valid_submission(&[1, 2, 3]));
+        assert!(!game.is_valid_submission(&[0, 1, 2, 3]));
     }
 }
