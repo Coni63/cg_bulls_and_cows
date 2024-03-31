@@ -44,6 +44,7 @@ pub struct Solver {
     possibilities_sorted: Vec<Vec<u8>>,
     sorted_idx: usize,
     rng: rand::rngs::ThreadRng,
+    history_prediction: Vec<(Vec<u8>, u8, u8)>,
 }
 
 impl Solver {
@@ -61,6 +62,7 @@ impl Solver {
             possibilities_sorted: Vec::new(),
             rng: rand::thread_rng(),
             sorted_idx: 0,
+            history_prediction: Vec::new(),
         }
     }
 
@@ -86,14 +88,26 @@ impl Solver {
         self.possibilities_sorted
             .retain(|candidate| is_candidate(candidate, &prediction, &used_digits, bulls, cows));
 
+        self.history_prediction
+            .push((prediction.clone(), bulls, cows));
+
         // for the remaining time, sort the possibilities_to_sort
-        while starting_time.elapsed().as_millis() < 40 {
+        while starting_time.elapsed().as_millis() < 44 {
             for _ in 0..1000 {
                 if let Some(candidate) = self.possibilities_to_sort.get(self.sorted_idx) {
-                    if is_candidate(candidate, &prediction, &used_digits, bulls, cows) {
+                    let mut valid = true;
+                    for (prediction, bulls, cows) in self.history_prediction.iter() {
+                        if !is_candidate(candidate, prediction, &used_digits, *bulls, *cows) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                    if valid {
                         self.possibilities_sorted.push(candidate.clone());
                     }
                     self.sorted_idx += 1;
+                } else {
+                    return;
                 }
             }
         }
