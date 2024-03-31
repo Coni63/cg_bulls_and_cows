@@ -8,20 +8,22 @@ pub struct Game {
 
 impl Game {
     #[allow(dead_code)]
-    pub fn random(size: u8) -> Game {
+    pub fn random(size: usize) -> Game {
         let mut board: Vec<u8> = (0..=9).collect();
         while board[0] == 0 {
             board.shuffle(&mut rand::thread_rng());
         }
         Game {
-            board: board.drain(..size as usize).collect(),
+            board: board.drain(..size).collect(),
         }
     }
 
+    #[allow(dead_code)]
     pub fn fixed(board: Vec<u8>) -> Game {
         Game { board }
     }
 
+    #[allow(dead_code)]
     pub fn describe(&self) {
         println!("Answer : {:?}", self.board);
     }

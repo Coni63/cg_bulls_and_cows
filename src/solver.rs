@@ -1,4 +1,5 @@
-use rand::seq::SliceRandom;
+use rand::{seq::SliceRandom, Rng};
+use std::collections::HashSet;
 use std::time::Instant;
 
 use itertools::Itertools;
@@ -19,20 +20,39 @@ fn generate_possibilities(length: usize) -> Vec<Vec<u8>> {
         .collect()
 }
 
+fn is_candidate(
+    candidate: &[u8],
+    prediction: &[u8],
+    used_digits: &[bool],
+    bulls: u8,
+    cows: u8,
+) -> bool {
+    let mut b = 0;
+    let mut c = 0;
+    for (i, &digit) in candidate.iter().enumerate() {
+        if digit == prediction[i] {
+            b += 1;
+        } else if used_digits[digit as usize] {
+            c += 1;
+        }
+    }
+    b == bulls && c == cows
+}
+
 pub struct Solver {
     possibilities: Vec<Vec<u8>>,
     rng: rand::rngs::ThreadRng,
 }
 
 impl Solver {
-    pub fn new(length: u8) -> Self {
-        let start = Instant::now();
-        let possibilities = generate_possibilities(length as usize);
-        eprintln!(
-            "Generated {} permutations in {:?}",
-            possibilities.len(),
-            start.elapsed()
-        );
+    pub fn new(length: usize) -> Self {
+        // let start = Instant::now();
+        let possibilities = generate_possibilities(length);
+        // eprintln!(
+        //     "Generated {} permutations in {:?}",
+        //     possibilities.len(),
+        //     start.elapsed()
+        // );
 
         Self {
             possibilities,
@@ -41,24 +61,19 @@ impl Solver {
     }
 
     pub fn get(&mut self) -> Vec<u8> {
-        self.possibilities.shuffle(&mut self.rng);
-        self.possibilities[0].clone()
+        let idx: usize = self.rng.gen_range(0..self.possibilities.len());
+        self.possibilities.get(idx).unwrap().clone()
     }
 
     pub fn update(&mut self, prediction: Vec<u8>, bulls: u8, cows: u8) {
-        self.possibilities.retain(|p| {
-            let mut b = 0;
-            let mut c = 0;
-            for (i, &digit) in p.iter().enumerate() {
-                if digit == prediction[i] {
-                    b += 1;
-                } else if prediction.contains(&digit) {
-                    c += 1;
-                }
-            }
-            b == bulls && c == cows
-        });
+        let mut used_digits = [false; 10];
+        for &digit in prediction.iter() {
+            used_digits[digit as usize] = true;
+        }
 
-        eprintln!("Remaining possibilities: {}", self.possibilities.len());
+        self.possibilities
+            .retain(|candidate| is_candidate(candidate, &prediction, &used_digits, bulls, cows));
+
+        // eprintln!("Remaining possibilities: {}", self.possibilities.len());
     }
 }
