@@ -40,7 +40,9 @@ fn is_candidate(
 }
 
 pub struct Solver {
-    possibilities: Vec<Vec<u8>>,
+    possibilities_to_sort: Vec<Vec<u8>>,
+    possibilities_sorted: Vec<Vec<u8>>,
+    sorted_idx: usize,
     rng: rand::rngs::ThreadRng,
 }
 
@@ -55,14 +57,21 @@ impl Solver {
         // );
 
         Self {
-            possibilities,
+            possibilities_to_sort: possibilities,
+            possibilities_sorted: Vec::new(),
             rng: rand::thread_rng(),
+            sorted_idx: 0,
         }
     }
 
     pub fn get(&mut self) -> Vec<u8> {
-        let idx: usize = self.rng.gen_range(0..self.possibilities.len());
-        self.possibilities.get(idx).unwrap().clone()
+        if !self.possibilities_sorted.is_empty() {
+            let idx: usize = self.rng.gen_range(0..self.possibilities_sorted.len());
+            self.possibilities_sorted.get(idx).unwrap().clone()
+        } else {
+            let idx: usize = self.rng.gen_range(0..self.possibilities_to_sort.len());
+            self.possibilities_to_sort.get(idx).unwrap().clone()
+        }
     }
 
     pub fn update(&mut self, prediction: Vec<u8>, bulls: u8, cows: u8) {
@@ -71,8 +80,23 @@ impl Solver {
             used_digits[digit as usize] = true;
         }
 
-        self.possibilities
+        let starting_time = Instant::now();
+
+        // filter out possibilities that are not consistent with the prediction
+        self.possibilities_sorted
             .retain(|candidate| is_candidate(candidate, &prediction, &used_digits, bulls, cows));
+
+        // for the remaining time, sort the possibilities_to_sort
+        while starting_time.elapsed().as_millis() < 40 {
+            for _ in 0..1000 {
+                if let Some(candidate) = self.possibilities_to_sort.get(self.sorted_idx) {
+                    if is_candidate(candidate, &prediction, &used_digits, bulls, cows) {
+                        self.possibilities_sorted.push(candidate.clone());
+                    }
+                    self.sorted_idx += 1;
+                }
+            }
+        }
 
         // eprintln!("Remaining possibilities: {}", self.possibilities.len());
     }
